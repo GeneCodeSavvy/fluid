@@ -202,8 +202,20 @@ class DataLoad(K8sObject):
         self.resource["spec"]["ttlSecondsAfterFinished"] = ttl
         return self
 
-def assemble_dataset(testcase):
-    if testcase == "alluxio-webufs":
+def assemble_dataset(testcase, hostpath_dir="/mnt/data/hostpath-test", node_affinity_key="", node_affinity_value=""):
+    if testcase == "hostpath":
+        mount = Mount()
+        mount.set_mount_info("hostpath-data", "local://{}".format(hostpath_dir))
+
+        dataset = Dataset("hostpath-data")
+        dataset.add_mount(mount.dump())
+
+        if node_affinity_key and node_affinity_value:
+            dataset.set_node_affinity(node_affinity_key, node_affinity_value)
+
+        return dataset
+
+    elif testcase == "alluxio-webufs":
         mount = Mount()
         mount.set_mount_info("zookeeper", webufs)
 
@@ -253,7 +265,9 @@ def assemble_dataset(testcase):
 
 
 def assemble_runtime(testcase):
-    if testcase == "alluxio-webufs":
+    if testcase == "hostpath":
+        return __assemble_runtime_by_kind("alluxio", "hostpath-data")
+    elif testcase == "alluxio-webufs":
         return __assemble_runtime_by_kind("alluxio", "hbase")
     elif testcase == "alluxio-oss":
         return __assemble_runtime_by_kind("alluxio", "alluxio-demo-dataset")

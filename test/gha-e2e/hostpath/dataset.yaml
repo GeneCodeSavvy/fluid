@@ -1,0 +1,32 @@
+apiVersion: data.fluid.io/v1alpha1
+kind: Dataset
+metadata:
+  name: hostpath-data
+spec:
+  mounts:
+    - mountPoint: local:///mnt/data/hostpath-test
+      name: hostpath-data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: fluid.io/hostpath-test
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: data.fluid.io/v1alpha1
+kind: AlluxioRuntime
+metadata:
+  name: hostpath-data
+spec:
+  replicas: 1
+  data:
+    replicas: 1
+  tieredstore:
+    levels:
+      - mediumtype: MEM
+        path: /dev/shm
+        quota: 2Gi
+        high: "0.95"
+        low: "0.7"
